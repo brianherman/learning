@@ -1,30 +1,43 @@
-/*
- * 1c0111001f010100061a024b53535009181c
- */
-extern crate rustc_serialize as serialize;
-use serialize::hex::FromHex;
-use serialize::base64::{self, ToBase64};
+extern crate crypto;
+extern crate rand;
+use std::str;
+use crypto::{ symmetriccipher, buffer, aes, blockmodes };
+use crypto::buffer::{ ReadBuffer, WriteBuffer, BufferResult };
+use std::io;
+use std::fs::File;
+use std::io::prelude::*;
+fn open_file(path: &str)-> &[u8]{
+    let mut f = try!(File::open(path));
+    let mut encrypted_data_string = String::new();
+    try!(f.read_to_string(&mut encrypted_data_string));
+    let ed = encrypted_data_string.as_bytes();
+    ed
+}
+fn decrypt()-> Result<Vec<u8>, symmetriccipher::SymmetricCipherError>{
+    let key = "YELLOW SUBMARINE".as_bytes();
+    let encrypted_data = open_file("/home/brianherman/pysimplerust/learning/aes.txt"); 
+    let mut decryptor = aes::cbc_decryptor(aes::KeySize::KeySize128,
+                                           key,
+                                           &[0u8],
+                                           blockmodes::NoPadding);
+    let mut final_result = Vec::<u8>::new();
+    let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
+    let mut buffer = [0; 4096];
+    let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
+
+    loop{
+         let result = try!(decryptor.decrypt(&mut read_buffer, &mut write_buffer, true));
+         final_result.extend(write_buffer.take_read_buffer().take_remaining().iter().map(|&i| i));
+        match result{
+            BufferResult::BufferUnderflow => break,
+            BufferResult::BufferOverflow => {}
+        }
+    }
+
+    println!("{:?}", final_result);
+    Ok(final_result)
+}
+
 fn main(){
-  let test = xor("111111","ffffff");
-  for x in test{
-    println!("{}", x);
-  }
-}
-fn xor(input: &str, byte: &str)-> Vec<u8>{
-    if input.len() != byte.len(){
-        return vec![0];
-    }
-    let input2hex = input.from_hex().unwrap(); 
-    let byte2hex = byte.from_hex().unwrap();
-    let mut xor = Vec::new();
-    for it in input2hex.iter().zip(byte2hex.iter()){
-        let (ai, bi) = it;
-        xor.push(ai ^ bi);
-    }
-    return xor;
-}
-
-
-fn base64(input: &str) -> String{
-    return input.from_hex().unwrap().to_base64(base64::STANDARD);
+    let decrypted = decrypt().ok().unwrap();
 }

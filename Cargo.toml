@@ -5,3 +5,6 @@ authors = ["Brian Herman <brianherman@gmail.com>"]
 
 [dependencies]
 rustc-serialize = "*"
+openssl = "*"
+rust-crypto = "^0.2"
+rand = "*"
