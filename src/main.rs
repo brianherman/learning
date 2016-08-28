@@ -6,22 +6,22 @@ use crypto::buffer::{ ReadBuffer, WriteBuffer, BufferResult };
 use std::io;
 use std::fs::File;
 use std::io::prelude::*;
-fn open_file(path: &str)-> &[u8]{
+fn open_file(path: &str)-> Result<String, io::Error>{
     let mut f = try!(File::open(path));
     let mut encrypted_data_string = String::new();
     try!(f.read_to_string(&mut encrypted_data_string));
-    let ed = encrypted_data_string.as_bytes();
-    ed
+    Ok(encrypted_data_string)
 }
 fn decrypt()-> Result<Vec<u8>, symmetriccipher::SymmetricCipherError>{
     let key = "YELLOW SUBMARINE".as_bytes();
-    let encrypted_data = open_file("/home/brianherman/pysimplerust/learning/aes.txt"); 
+    let encrypted_data = open_file("/home/brianherman/pysimplerust/learning/7.txt"); 
     let mut decryptor = aes::cbc_decryptor(aes::KeySize::KeySize128,
                                            key,
                                            &[0u8],
                                            blockmodes::NoPadding);
     let mut final_result = Vec::<u8>::new();
-    let mut read_buffer = buffer::RefReadBuffer::new(encrypted_data);
+    let ed = encrypted_data.ok().unwrap();
+    let mut read_buffer = buffer::RefReadBuffer::new(ed.as_bytes());
     let mut buffer = [0; 4096];
     let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
 
@@ -40,4 +40,7 @@ fn decrypt()-> Result<Vec<u8>, symmetriccipher::SymmetricCipherError>{
 
 fn main(){
     let decrypted = decrypt().ok().unwrap();
+    println!("{:?}", decrypted);
+    let end = str::from_utf8(&decrypted).unwrap();
+    println!("{:?}", end);
 }

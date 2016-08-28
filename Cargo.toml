@@ -8,3 +8,7 @@ rustc-serialize = "*"
 openssl = "*"
 rust-crypto = "^0.2"
 rand = "*"
+
+[[bin]]
+name = "xor.ex" 
+path = "src/xor.rs"
